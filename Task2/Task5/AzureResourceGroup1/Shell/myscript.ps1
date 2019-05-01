@@ -1,0 +1,1 @@
+New-Item -ItemType File -Path $Path -Name $Name -Value "This file is created by Custom Script Extension"

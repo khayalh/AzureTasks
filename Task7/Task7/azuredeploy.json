@@ -1,0 +1,604 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "VMAdminUserName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "VMAdminPassword": {
+      "type": "securestring"
+    },
+    "VMWindowsOSVersion": {
+      "type": "string",
+      "defaultValue": "2012-R2-Datacenter",
+      "allowedValues": [
+        "2008-R2-SP1",
+        "2012-Datacenter",
+        "2012-R2-Datacenter",
+        "Windows-Server-Technical-Preview",
+        "2016-Datacenter"
+      ]
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "Auto-generated container in staging storage account to receive post-build staging folder upload"
+      }
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Auto-generated token to access _artifactsLocation"
+      }
+    }
+  },
+  "variables": {
+    "networkSecurityGroupName": "myNSG",
+    "DnsNameForNLB": "mynlb",
+    "AvailabilitySetName": "AvailabilitySet",
+    "MyStorageAccountName": "[concat('mystorage', uniqueString(resourceGroup().id))]",
+    "MyStorageAccountType": "Standard_LRS",
+    "MasterVMName": "MasterVM",
+    "SlaveVMName": "SlaveVM",
+    "MyVNetPrefix": "10.0.0.0/16",
+    "MyVNetSubnet1Name": "Subnet-1",
+    "MyVNetSubnet1Prefix": "10.0.0.0/24",
+    "MyVNetSubnet2Name": "Subnet-2",
+    "MyVNetSubnet2Prefix": "10.0.1.0/24",
+    "MasterVMImagePublisher": "MicrosoftWindowsServer",
+    "MasterVMImageOffer": "WindowsServer",
+    "MasterVMOSDiskName": "MasterVMOSDisk",
+    "MasterVMVmSize": "Standard_D2_v2",
+    "MasterVMVnetID": "[resourceId('Microsoft.Network/virtualNetworks', 'MyVNet')]",
+    "MasterVMSubnetRef": "[concat(variables('MasterVMVnetID'), '/subnets/', variables('MyVNetSubnet1Name'))]",
+    "MasterVMNicName": "[concat(variables('MasterVMName'), 'NetworkInterface')]",
+    "SlaveVMImagePublisher": "MicrosoftWindowsServer",
+    "SlaveVMImageOffer": "WindowsServer",
+    "SlaveVMOSDiskName": "SlaveVMOSDisk",
+    "SlaveVMVmSize": "Standard_D2_v2",
+    "SlaveVMVnetID": "[resourceId('Microsoft.Network/virtualNetworks', 'MyVNet')]",
+    "SlaveVMSubnetRef": "[concat(variables('SlaveVMVnetID'), '/subnets/', variables('MyVNetSubnet2Name'))]",
+    "SlaveVMNicName": "[concat(variables('SlaveVMName'), 'NetworkInterface')]",
+    "DSCArchiveFolder": "DSC",
+    "DSC1ArchiveFileName": "DSC1.zip",
+    "DSC2ArchiveFileName": "DSC2.zip"
+  },
+  "resources": [
+    {
+      "name": "[variables('AvailabilitySetName')]",
+      "type": "Microsoft.Compute/availabilitySets",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2018-10-01",
+      "dependsOn": [ "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]" ],
+      "tags": {
+        "displayName": "AvailabilitySet"
+      },
+      "properties": {
+        "platformUpdateDomainCount": 2,
+        "platformFaultDomainCount": 2
+      },
+      "sku": {
+        "name": "Aligned"
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "myPublicIp",
+      "apiVersion": "2018-12-01",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('DnsNameForNLB')]"
+        }
+      },
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Network/loadBalancers",
+      "name": "myNLB",
+      "apiVersion": "2018-12-01",
+      "location": "[resourceGroup().location]",
+      "sku" : {
+        "name" : "Standard"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', 'myPublicIp')]"
+      ],
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "nlbFrontEnd",
+            "properties": {
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'myPublicIp')]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "nlbBackEnd"
+          }
+        ],
+        "inboundNatRules": [
+          {
+            "name": "RDP-VM0",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','myNLB'),'/frontendIPConfigurations/nlbFrontEnd')]"
+              },
+              "protocol": "Tcp",
+              "frontendPort": 50001,
+              "backendPort": 3389,
+              "enableFloatingIP": false
+            }
+          },
+          {
+            "name": "RDP-VM1",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','myNLB'),'/frontendIPConfigurations/nlbFrontEnd')]"
+              },
+              "protocol": "Tcp",
+              "frontendPort": 50002,
+              "backendPort": 3389,
+              "enableFloatingIP": false
+            }
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "LBRule",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','myNLB'),'/frontendIPConfigurations/nlbFrontEnd')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','myNLB'),'/backendAddressPools/nlbBackEnd')]"
+              },
+              "protocol": "Tcp",
+              "frontendPort": 8983,
+              "backendPort": 8983,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 5,
+              "probe": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','myNLB'),'/probes/tcpProbe')]"
+              }
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "tcpProbe",
+            "properties": {
+              "protocol": "Tcp",
+              "port": 8983,
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2018-12-01",
+      "name": "[variables('networkSecurityGroupName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [],
+      "properties": {
+        "securityRules": [
+          {
+            "name": "Allow8983",
+            "properties": {
+              "description": "Allow TCP port 8983",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "8983",
+              "access": "Allow",
+              "direction": "Inbound",
+              "protocol": "Tcp",
+              "priority": 100
+            }
+          },
+          {
+            "name": "RDP",
+            "properties": {
+              "description": "Allow RDP port",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "direction": "Inbound",
+              "priority": 500
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('MyStorageAccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2018-02-01",
+      "sku": {
+        "name": "[variables('MyStorageAccountType')]"
+      },
+      "tags": {
+        "displayName": "MyStorageAccount"
+      },
+      "kind": "Storage"
+    },
+    {
+      "name": "MyVNet",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2018-12-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+      ],
+      "tags": {
+        "displayName": "MyVNet"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('MyVNetPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('MyVNetSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('MyVNetSubnet1Prefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+              }
+            }
+          },
+          {
+            "name": "[variables('MyVNetSubnet2Name')]",
+            "properties": {
+              "addressPrefix": "[variables('MyVNetSubnet2Prefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('MasterVMNicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2018-12-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses/', 'myPublicIp')]",
+        "[resourceId('Microsoft.Network/virtualNetworks', 'MyVNet')]",
+        "[resourceId('Microsoft.Network/loadBalancers','myNLB')]"
+      ],
+      "tags": {
+        "displayName": "MasterVMNic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('MasterVMSubnetRef')]"
+              },
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers','myNLB'),'/backendAddressPools/nlbBackEnd')]"
+                }
+              ],
+              "loadBalancerInboundNatRules": [
+                {
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers','myNLB'),'/inboundNatRules/RDP-VM0')]"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('MasterVMName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2018-10-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('MyStorageAccountName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('MasterVMNicName'))]",
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+      ],
+      "tags": {
+        "displayName": "MasterVM"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('MasterVMVmSize')]"
+        },
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+        },
+        "osProfile": {
+          "computerName": "[variables('MasterVMName')]",
+          "adminUsername": "[parameters('VMAdminUsername')]",
+          "adminPassword": "[parameters('VMAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('MasterVMImagePublisher')]",
+            "offer": "[variables('MasterVMImageOffer')]",
+            "sku": "[parameters('VMWindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[variables('MasterVMOSDiskName')]",
+            "managedDisk": {
+              "storageAccountType": "StandardSSD_LRS"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          },
+          "dataDisks": [
+            {
+              "name": "MasterVMDataDisk",
+              "managedDisk": {
+                "storageAccountType": "StandardSSD_LRS"
+              },
+              "diskSizeGB": 200,
+              "lun": 0,
+              "createOption": "Empty"
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('MasterVMNicName'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts', variables('MyStorageAccountName')), '2016-01-01').primaryEndpoints.blob]"
+          }
+        }
+      },
+      "resources": [
+        {
+          "name": "Microsoft.Powershell.DSC",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2018-10-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', variables('MasterVMName'))]"
+          ],
+          "tags": {
+            "displayName": "DSC1"
+          },
+          "properties": {
+            "publisher": "Microsoft.Powershell",
+            "type": "DSC",
+            "typeHandlerVersion": "2.9",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "configuration": {
+                "url": "[concat(parameters('_artifactsLocation'), '/', variables('DSCArchiveFolder'), '/', variables('DSC1ArchiveFileName'))]",
+                "script": "DSC1.ps1",
+                "function": "Main",
+                "timestamp": 123456789
+              },
+              "configurationArguments": {
+                "nodeName": "[variables('MasterVMName')]",
+                "SolrScriptFile" :  "[concat(parameters('_artifactsLocation'), '/', 'Script', '/', 'solrservicerun.ps1', parameters('_artifactsLocationSasToken') )]"
+              }
+            },
+            "protectedSettings": {
+              "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
+            }
+          }
+        },
+        {
+          "name": "CustomScript1",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2018-10-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', variables('MasterVMName'))]",
+            "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('MasterVMName'), 'Microsoft.Powershell.DSC')]"
+          ],
+          "tags": {
+            "displayName": "CustomScript1"
+          },
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.4",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[concat(parameters('_artifactsLocation'), '/', 'CustomScripts', '/', 'CustomScript1.ps1', parameters('_artifactsLocationSasToken'))]"
+              ],
+              "timestamp": 123456789,
+              "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ', 'CustomScripts', '/', 'CustomScript1.ps1')]"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "[variables('SlaveVMNicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2018-12-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', 'MyVNet')]",
+        "[resourceId('Microsoft.Network/loadBalancers','myNLB')]"
+      ],
+      "tags": {
+        "displayName": "SlaveVMNic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('SlaveVMSubnetRef')]"
+              },
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers','myNLB'),'/backendAddressPools/nlbBackEnd')]"
+                }
+              ],
+              "loadBalancerInboundNatRules": [
+                {
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers','myNLB'),'/inboundNatRules/RDP-VM1')]"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('SlaveVMName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2018-10-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('MyStorageAccountName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('SlaveVMNicName'))]",
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+      ],
+      "tags": {
+        "displayName": "SlaveVM"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('SlaveVMVmSize')]"
+        },
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+        },
+        "osProfile": {
+          "computerName": "[variables('SlaveVMName')]",
+          "adminUsername": "[parameters('VMAdminUsername')]",
+          "adminPassword": "[parameters('VMAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('SlaveVMImagePublisher')]",
+            "offer": "[variables('SlaveVMImageOffer')]",
+            "sku": "[parameters('VMWindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[variables('SlaveVMOSDiskName')]",
+            "managedDisk": {
+              "storageAccountType": "StandardSSD_LRS"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          },
+          "dataDisks": [
+            {
+              "name": "SlaveVMDataDisk",
+              "managedDisk": {
+                "storageAccountType": "StandardSSD_LRS"
+              },
+              "diskSizeGB": 200,
+              "lun": 0,
+              "createOption": "Empty"
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('SlaveVMNicName'))]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "name": "Microsoft.Powershell.DSC",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2018-10-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', variables('SlaveVMName'))]"
+          ],
+          "tags": {
+            "displayName": "DSC2"
+          },
+          "properties": {
+            "publisher": "Microsoft.Powershell",
+            "type": "DSC",
+            "typeHandlerVersion": "2.9",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "configuration": {
+                "url": "[concat(parameters('_artifactsLocation'), '/', variables('DSCArchiveFolder'), '/', variables('DSC2ArchiveFileName'))]",
+                "script": "DSC2.ps1",
+                "function": "Main",
+                "timestamp": 123456789
+              },
+              "configurationArguments": {
+                "nodeName": "[variables('SlaveVMName')]",
+                "SolrScriptFile" :  "[concat(parameters('_artifactsLocation'), '/', 'Script', '/', 'solrservicerun.ps1', parameters('_artifactsLocationSasToken') )]"
+              }
+            },
+            "protectedSettings": {
+              "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
+            }
+          }
+        },
+        {
+          "name": "CustomScript2",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2018-10-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', variables('SlaveVMName'))]",
+            "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('SlaveVMName'), 'Microsoft.Powershell.DSC')]"
+          ],
+          "tags": {
+            "displayName": "CustomScript2"
+          },
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.4",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[concat(parameters('_artifactsLocation'), '/', 'CustomScripts', '/', 'CustomScript2.ps1', parameters('_artifactsLocationSasToken'))]"
+              ],
+              "timestamp": 123456789,
+              "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ', 'CustomScripts', '/', 'CustomScript2.ps1')]"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {}
+}
