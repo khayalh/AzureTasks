@@ -15,6 +15,12 @@
         "description": "Password for the Virtual Machine."
       }
     },
+    "Pfxcertpassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password for pfx certificate."
+      }
+    },
     "dnsNameForPublicIP": {
       "type": "string",
       "minLength": 1,
@@ -575,7 +581,7 @@
             "protectedSettings": {
               "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
               "configurationArguments": {
-                "pfxpass": "certpass"
+                "pfxpass": "[parameters('Pfxcertpassword')]"
               }
             }
           }

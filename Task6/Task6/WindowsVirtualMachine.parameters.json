@@ -8,6 +8,9 @@
     "adminPassword": {
       "value": "A123456a"
     },
+    "Pfxcertpassword": {
+      "value": "certpass"
+    },
     "dnsNameForPublicIP": {
       "value": "iissrv"
     },
