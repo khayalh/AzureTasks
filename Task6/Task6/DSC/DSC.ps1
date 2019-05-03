@@ -7,9 +7,12 @@ Configuration Main
     )
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
-    Import-DscResource -ModuleName xPSDesiredStateConfiguration
-    Import-DscResource -ModuleName xWebAdministration
-    Import-DscResource -ModuleName xCertificate
+    # Import-DscResource -ModuleName xPSDesiredStateConfiguration
+    Find-Module -Name xPSDesiredStateConfiguration | Install-Module
+    # Import-DscResource -ModuleName xWebAdministration
+    Find-Module -Name xWebAdministration | Install-Module
+    # Import-DscResource -ModuleName xCertificate
+    Find-Module -Name xCertificate | Install-Module
 
     File ArtifactsFolder {
         Type            = "Directory"
@@ -21,7 +24,7 @@ Configuration Main
         Uri             = $certfilelocation
         MatchSource     = $true
         DependsOn       = "[File]ArtifactsFolder" 
-      }
+    }
     WindowsFeature IIS
     {
         Ensure          = "Present"
@@ -39,13 +42,13 @@ Configuration Main
         ValueType = 'Dword'
         ValueData = '1'
         DependsOn = @('[WindowsFeature]IIS','[WindowsFeature]Management')
-   }
+    }
    Service StartWMSVC {
         Name = 'WMSVC'
         StartupType = 'Automatic'
         State = 'Running'
         DependsOn = '[Registry]RemoteManagement'
-   }
+    }
     # Stop the default website
     xWebsite DefaultSite
     {
