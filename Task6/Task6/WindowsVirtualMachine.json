@@ -581,7 +581,9 @@
             "protectedSettings": {
               "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
               "configurationArguments": {
-                "pfxpass": "[parameters('Pfxcertpassword')]"
+                "Credential" : {
+                  "Password": "[parameters('Pfxcertpassword')]"
+                }
               }
             }
           }
