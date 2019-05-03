@@ -9,10 +9,10 @@ Configuration Main
     Import-DscResource -ModuleName PSDesiredStateConfiguration
     # Import-DscResource -ModuleName xPSDesiredStateConfiguration
     Find-Module xPSDesiredStateConfiguration | Install-Module
-    # Import-DscResource -ModuleName xWebAdministration
-    Find-Module xWebAdministration | Install-Module
-    # Import-DscResource -ModuleName xCertificate
-    Find-Module xCertificate | Install-Module
+    Import-DscResource -ModuleName xWebAdministration
+    # Find-Module xWebAdministration | Install-Module
+    Import-DscResource -ModuleName xCertificate
+    # Find-Module xCertificate | Install-Module
 
     File ArtifactsFolder {
         Type            = "Directory"
