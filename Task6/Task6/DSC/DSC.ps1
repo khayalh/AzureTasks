@@ -8,11 +8,11 @@ Configuration Main
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
     # Import-DscResource -ModuleName xPSDesiredStateConfiguration
-    Find-Module -Name xPSDesiredStateConfiguration | Install-Module
+    Find-Module xPSDesiredStateConfiguration | Install-Module
     # Import-DscResource -ModuleName xWebAdministration
-    Find-Module -Name xWebAdministration | Install-Module
+    Find-Module xWebAdministration | Install-Module
     # Import-DscResource -ModuleName xCertificate
-    Find-Module -Name xCertificate | Install-Module
+    Find-Module xCertificate | Install-Module
 
     File ArtifactsFolder {
         Type            = "Directory"
@@ -43,7 +43,7 @@ Configuration Main
         ValueData = '1'
         DependsOn = @('[WindowsFeature]IIS','[WindowsFeature]Management')
     }
-   Service StartWMSVC {
+    Service StartWMSVC {
         Name = 'WMSVC'
         StartupType = 'Automatic'
         State = 'Running'
