@@ -3,7 +3,7 @@ Configuration Main
 
     Param ( [string] $nodeName,
         [string]$certfilelocation,
-        [securestring]$pfxpass="certpass"
+        [pscredential]$pfxpass
     )
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
