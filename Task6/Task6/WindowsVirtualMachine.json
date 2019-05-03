@@ -575,16 +575,17 @@
               },
               "configurationArguments": {
                 "nodeName": "[variables('vmName')]",
-                "certfilelocation" :  "[concat(parameters('_artifactsLocation'), '/', 'CertFolder', '/', 'selfsignedcert.pfx', parameters('_artifactsLocationSasToken') )]"
+                "certfilelocation" :  "[concat(parameters('_artifactsLocation'), '/', 'CertFolder', '/', 'selfsignedcert.pfx', parameters('_artifactsLocationSasToken') )]",
+                "Credential": {
+                  "Password" : "PrivateSettingsRef:Pfxcertpass"
+                }
               }
             },
             "protectedSettings": {
               "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
-              "configurationArguments": {
-                "Credential" : {
-                  "Password": "[parameters('Pfxcertpassword')]"
+                "Items" : {
+                  "Pfxcertpass": "[parameters('Pfxcertpassword')]"
                 }
-              }
             }
           }
         }
