@@ -15,13 +15,6 @@
         "description": "Password for the Virtual Machine."
       }
     },
-    "certpassword": {
-      "type": "string",
-      "defaultValue": "certpass",
-      "metadata": {
-        "description": "Password for the PFX certificate."
-      }
-    },
     "dnsNameForPublicIP": {
       "type": "string",
       "minLength": 1,
@@ -584,7 +577,7 @@
               "configurationArguments": {
                 "CertCredential": {
                   "Username": "username",
-                  "Password": "[parameters('certpassword')]"
+                  "Password": "certpass"
                 }
               }
             }

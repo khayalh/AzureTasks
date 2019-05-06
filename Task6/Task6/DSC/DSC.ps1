@@ -84,7 +84,7 @@ Configuration Main
             }
         )
     }
-    $cd = @{
+    @{
         AllNodes = @(
             @{
                 NodeName = $nodeName
