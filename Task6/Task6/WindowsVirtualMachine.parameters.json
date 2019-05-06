@@ -13,6 +13,9 @@
     },
     "windowsOSVersion": {
       "value": "2016-Datacenter"
+    },
+    "pfxcertpass": {
+      "value": "certpass"
     }
   }
 }

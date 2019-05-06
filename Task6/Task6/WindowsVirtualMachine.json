@@ -15,6 +15,12 @@
         "description": "Password for the Virtual Machine."
       }
     },
+    "pfxcertpass": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password for the PFX certificate."
+      }
+    },
     "dnsNameForPublicIP": {
       "type": "string",
       "minLength": 1,
@@ -565,20 +571,27 @@
                 "url": "[concat(parameters('_artifactsLocation'), '/', variables('DSCArchiveFolder'), '/', variables('DSCArchiveFileName'))]",
                 "script": "DSC.ps1",
                 "function": "Main",
-                "timestamp":123456789
+                "timestamp": 123456789
               },
               "configurationArguments": {
                 "nodeName": "[variables('vmName')]",
-                "certfilelocation" :  "[concat(parameters('_artifactsLocation'), '/', 'CertFolder', '/', 'selfsignedcert.pfx', parameters('_artifactsLocationSasToken') )]"
-              }
+                "certfilelocation": "[concat(parameters('_artifactsLocation'), '/', 'CertFolder', '/', 'selfsignedcert.pfx', parameters('_artifactsLocationSasToken') )]"
+              },
+              "properties": [
+                {
+                  "Name": "CertCredential",
+                  "Value": {
+                    "Username": "User",
+                    "Password": "PrivateSettingsRef:pfxcertpassword"
+                  },
+                  "TypeName": "System.Management.Automation.PSCredential"
+                }
+              ]
             },
             "protectedSettings": {
               "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
-              "configurationArguments": {
-                "CertCredential": {
-                  "Username": "username",
-                  "Password": "certpass"
-                }
+              "Items": {
+                "pfxcertpassword": "[parameters('pfxcertpass')]"
               }
             }
           }
