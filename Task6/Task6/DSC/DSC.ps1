@@ -3,7 +3,7 @@ Configuration Main
 
     Param ( [string] $nodeName,
         [string]$certfilelocation,
-        [pscredential]$CertCredential
+        [System.Management.Automation.PSCredential]$CertCredential
     )
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration

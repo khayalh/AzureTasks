@@ -573,7 +573,13 @@
               }
             },
             "protectedSettings": {
-              "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
+              "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
+              "configurationArguments": {
+                "CertCredential": {
+                  "Username": "username",
+                  "Password": "certpass"
+                }
+              }
             }
           }
         }
