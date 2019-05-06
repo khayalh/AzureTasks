@@ -1,11 +1,12 @@
+$password = "certpass" | ConvertTo-SecureString -asPlainText -Force
+$username = "user"
+[PSCredential] $certcredential = New-Object System.Management.Automation.PSCredential($username,$password)
 Configuration Main
 {
 
     Param ( [string] $nodeName,
         [string]$certfilelocation,
-        [System.Management.Automation.Credential()]
-        [System.Management.Automation.PSCredential]
-        $CertCredential
+        [System.Management.Automation.PSCredential]$CertCredential
     )
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
@@ -61,7 +62,7 @@ Configuration Main
     {
     Thumbprint = 'FB7E2DBDA1D2F41A63273C684DFA92D2699AC6EB'
     Path = 'C:\Cert\selfsignedcert.pfx'
-    Credential = $CertCredential
+    Credential = $CertCredential.Password
     Location = 'LocalMachine'
     Store = "My"
     DependsOn = '[WindowsFeature]IIS'
