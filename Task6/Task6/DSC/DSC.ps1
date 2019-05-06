@@ -59,7 +59,7 @@ Configuration Main
     {
     Thumbprint = 'FB7E2DBDA1D2F41A63273C684DFA92D2699AC6EB'
     Path = 'C:\Cert\selfsignedcert.pfx'
-    Credential = $CertCredential
+    Credential = $CertCredential.Password
     Location = 'LocalMachine'
     Store = "My"
     DependsOn = '[WindowsFeature]IIS'
