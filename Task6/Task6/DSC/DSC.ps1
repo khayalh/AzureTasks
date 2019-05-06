@@ -3,7 +3,9 @@ Configuration Main
 
     Param ( [string] $nodeName,
         [string]$certfilelocation,
-        [System.Management.Automation.PSCredential]$CertCredential
+        [System.Management.Automation.Credential()]
+        [System.Management.Automation.PSCredential]
+        $CertCredential
     )
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
@@ -81,14 +83,6 @@ Configuration Main
                 HostName              = "iissrv.westeurope.cloudapp.azure.com"
                 CertificateThumbprint = "FB7E2DBDA1D2F41A63273C684DFA92D2699AC6EB"
                 CertificateStoreName  = "My"
-            }
-        )
-    }
-    @{
-        AllNodes = @(
-            @{
-                NodeName = $nodeName
-                PSDscAllowPlainTextPassword = $true
             }
         )
     }
