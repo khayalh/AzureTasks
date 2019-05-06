@@ -2,7 +2,7 @@
 
 Param(
     [string] $ResourceGroupLocation="westeurope",
-    [string] $ResourceGroupName = 'khayalazurerg',
+    [string] $ResourceGroupName = 'khayalazure',
     [switch] $UploadArtifacts,
     [string] $StorageAccountName,
     [string] $StorageContainerName = $ResourceGroupName.ToLowerInvariant() + '-stageartifacts',

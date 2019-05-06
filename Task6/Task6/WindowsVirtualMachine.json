@@ -15,12 +15,6 @@
         "description": "Password for the Virtual Machine."
       }
     },
-    "Pfxcertpassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Password for pfx certificate."
-      }
-    },
     "dnsNameForPublicIP": {
       "type": "string",
       "minLength": 1,
@@ -575,17 +569,11 @@
               },
               "configurationArguments": {
                 "nodeName": "[variables('vmName')]",
-                "certfilelocation" :  "[concat(parameters('_artifactsLocation'), '/', 'CertFolder', '/', 'selfsignedcert.pfx', parameters('_artifactsLocationSasToken') )]",
-                "Credential": {
-                  "Password" : "PrivateSettingsRef:Pfxcertpass"
-                }
+                "certfilelocation" :  "[concat(parameters('_artifactsLocation'), '/', 'CertFolder', '/', 'selfsignedcert.pfx', parameters('_artifactsLocationSasToken') )]"
               }
             },
             "protectedSettings": {
-              "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
-                "Items" : {
-                  "Pfxcertpass": "[parameters('Pfxcertpassword')]"
-                }
+              "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
             }
           }
         }

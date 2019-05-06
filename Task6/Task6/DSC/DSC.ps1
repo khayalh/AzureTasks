@@ -3,7 +3,7 @@ Configuration Main
 
     Param ( [string] $nodeName,
         [string]$certfilelocation,
-        [pscredential]$Credential
+        [pscredential]$CertCredential
     )
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
@@ -59,7 +59,7 @@ Configuration Main
     {
     Thumbprint = 'FB7E2DBDA1D2F41A63273C684DFA92D2699AC6EB'
     Path = 'C:\Cert\selfsignedcert.pfx'
-    Credential = $Credential.Password
+    Credential = $CertCredential
     Location = 'LocalMachine'
     Store = "My"
     DependsOn = '[WindowsFeature]IIS'
