@@ -84,4 +84,12 @@ Configuration Main
             }
         )
     }
+    $cd = @{
+        AllNodes = @(
+            @{
+                NodeName = $nodeName
+                PSDscAllowPlainTextPassword = $true
+            }
+        )
+    }
 }
