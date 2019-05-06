@@ -16,7 +16,7 @@
       }
     },
     "certpassword": {
-      "type": "securestring",
+      "type": "string",
       "defaultValue": "certpass",
       "metadata": {
         "description": "Password for the PFX certificate."
