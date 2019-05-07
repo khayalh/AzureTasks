@@ -62,7 +62,6 @@ Configuration Main
             Location   = 'LocalMachine'
             Store      = "WebHosting"
             DependsOn  = '[WindowsFeature]IIS'
-
         }
         # Create the new Website with HTTP
         xWebsite NewWebsite {
