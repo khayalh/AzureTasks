@@ -15,6 +15,12 @@
         "description": "Password for the Virtual Machine."
       }
     },
+    "thumbprint": {
+      "type": "string",
+      "metadata": {
+        "description": "thumprint"
+      }
+    },
     "pfxcertpass": {
       "type": "securestring",
       "metadata": {
@@ -575,23 +581,17 @@
               },
               "configurationArguments": {
                 "nodeName": "[variables('vmName')]",
-                "certfilelocation": "[concat(parameters('_artifactsLocation'), '/', 'CertFolder', '/', 'selfsignedcert.pfx', parameters('_artifactsLocationSasToken') )]"
-              },
-              "properties": [
-                {
-                  "Name": "CertCredential",
-                  "Value": {
-                    "Username": "User",
-                    "Password": "PrivateSettingsRef:pfxcertpassword"
-                  },
-                  "TypeName": "System.Management.Automation.PSCredential"
-                }
-              ]
+                "certfilelocation": "[concat(parameters('_artifactsLocation'), '/', 'CertFolder', '/', 'selfsignedcert.pfx', parameters('_artifactsLocationSasToken') )]",
+                "thumbprint": "[parameters('thumbprint')]"
+              }
             },
             "protectedSettings": {
               "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]",
-              "Items": {
-                "pfxcertpassword": "[parameters('pfxcertpass')]"
+              "configurationArguments": {
+                "certcredential": {
+                  "Username": "[parameters('adminUsername')]",
+                  "Password": "[parameters('pfxcertpass')]"
+                }
               }
             }
           }

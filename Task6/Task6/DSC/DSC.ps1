@@ -3,16 +3,17 @@ Configuration Main
 
     Param ( [string] $nodeName,
         [string]$certfilelocation,
-        [System.Management.Automation.PSCredential]$CertCredential
+        [string] $Thumbprint,
+        [PSCredential]$certcredential
     )
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName xPSDesiredStateConfiguration
     Import-DscResource -ModuleName xWebAdministration
     Import-DscResource -ModuleName xCertificate
+    
+    Node $AllNodes.NodeName {
 
-    Node $nodeName {
-        
         File ArtifactsFolder {
             Type            = "Directory"
             DestinationPath = "C:\Cert"
@@ -28,26 +29,6 @@ Configuration Main
             Ensure = "Present"
             Name   = "Web-Server"
         }
-        WindowsFeature Management {
- 
-            Name      = 'Web-Mgmt-Service'
-            Ensure    = 'Present'
-            DependsOn = @('[WindowsFeature]IIS')
-        }
-        Registry RemoteManagement {
-            Key       = 'HKLM:\SOFTWARE\Microsoft\WebManagement\Server'
-            ValueName = 'EnableRemoteManagement'
-            ValueType = 'Dword'
-            ValueData = '1'
-            DependsOn = @('[WindowsFeature]IIS', '[WindowsFeature]Management')
-        }
-        Service StartWMSVC {
-            Name        = 'WMSVC'
-            StartupType = 'Automatic'
-            State       = 'Running'
-            DependsOn   = '[Registry]RemoteManagement'
-        }
-        # Stop the default website
         xWebsite DefaultSite {
             Ensure       = "Present"
             Name         = "Default Web Site"
@@ -56,12 +37,12 @@ Configuration Main
             DependsOn    = "[WindowsFeature]IIS"
         }
         xPfxImport ImportPfxCert {
-            Thumbprint = 'FB7E2DBDA1D2F41A63273C684DFA92D2699AC6EB'
-            Path       = 'C:\Cert\selfsignedcert.pfx'
-            Credential = $CertCredential
+            Thumbprint = "$Thumbprint"
+            Path       = "C:\Cert\selfsignedcert.pfx"
+            Credential = $certcredential
             Location   = 'LocalMachine'
             Store      = "WebHosting"
-            DependsOn  = '[WindowsFeature]IIS'
+            DependsOn  = '[xRemoteFile]DownloadPackage'
         }
         # Create the new Website with HTTP
         xWebsite NewWebsite {
@@ -69,25 +50,17 @@ Configuration Main
             Name         = "iissrv.westeurope.cloudapp.azure.com"
             State        = "Started"
             PhysicalPath = "C:\inetpub\wwwroot"
-            DependsOn    = "[WindowsFeature]IIS", '[xPfxImport]ImportPfxCert'
-            BindingInfo  = @(
-                MSFT_xWebBindingInformation {
-                    Protocol              = "https"
-                    Port                  = 443
-                    HostName              = "iissrv.westeurope.cloudapp.azure.com"
-                    CertificateThumbprint = "FB7E2DBDA1D2F41A63273C684DFA92D2699AC6EB"
-                    CertificateStoreName  = "WebHosting"
-                }
-            )
+            DependsOn    = @("[WindowsFeature]IIS", "[xPfxImport]ImportPfxCert")
+            BindingInfo  = MSFT_xWebBindingInformation {
+                Protocol              = "https"
+                Port                  = 443
+                HostName              = "iissrv.westeurope.cloudapp.azure.com"
+                CertificateThumbprint = "$Thumbprint"
+                CertificateStoreName  = "WebHosting"
+            }
+        }
+        LocalConfigurationManager {
+            CertificateId = "$Thumbprint"
         }
     }
 }
-$cd = @{
-    AllNodes = @(
-        @{
-            NodeName                    = '*';
-            PSDscAllowPlainTextPassword = $true;
-        }
-    )
-}
-Main -ConfigurationData $cd

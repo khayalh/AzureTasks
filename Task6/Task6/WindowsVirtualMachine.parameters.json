@@ -14,6 +14,9 @@
     "windowsOSVersion": {
       "value": "2016-Datacenter"
     },
+    "thumbprint": {
+      "value": "FB7E2DBDA1D2F41A63273C684DFA92D2699AC6EB"
+    },
     "pfxcertpass": {
       "value": "certpass"
     }
