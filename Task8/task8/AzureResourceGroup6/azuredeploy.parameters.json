@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "secondRgName": {
+      "value": "task8Rg2"
+    },
+    "VMName": {
+      "value": "VM1"
+    },
+    "VMAdminUserName": {
+      "value": "Khayaladm"
+    },
+    "VMAdminPassword": {
+      "value": "A123456a"
+    },
+    "VMWindowsOSVersion": {
+      "value": "2016-Datacenter"
+    },
+    "vmpiDnsName": {
+      "value": "vm1dnsname"
+    },
+    "VM2Name": {
+      "value": "VM2"
+    },
+    "VM2WindowsOSVersion": {
+      "value": "2016-Datacenter"
+    },
+    "vm2publicipDnsName": {
+      "value": "vm2dnsname"
+    }
+  }
+}
