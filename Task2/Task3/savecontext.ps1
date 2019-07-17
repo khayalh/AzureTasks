@@ -1,2 +1,2 @@
-Save-AzureRmContext -Profile (Connect-AzureRmAccount) -path "C:\Scripts2\Task3\credentials.json"
-Import-AzureRmContext -Path "C:\Scripts2\Task3\credentials.json"
+Save-AzureRmContext -Profile (Connect-AzureRmAccount) -path "D:\AzureTasks\AzureTasks\Task2\Task3credentials.json"
+Import-AzureRmContext -Path "D:\AzureTasks\AzureTasks\Task2\Task3"
