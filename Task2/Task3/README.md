@@ -1,0 +1,1 @@
+After logging into Azure via PowerShell, save the credentials in a file that you can use in the future in the PowerShell script for the login process. Have a look Auto login to Azure with PowerShell and Persist user credentials across PowerShell sessions articles. (Azure PowerShell)

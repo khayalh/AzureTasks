@@ -1,0 +1,1 @@
+Create an ARM template to create a Windows Server 2016 Datacenter with a DNS name, DSC and Custom Script extension. In the ARM template root folder, add a new Shell folder and create myscript.ps1 PowerShell script in this folder. Copy this script to the Azure VM through the DSC extension. From Custom Script extension script run myscript.ps1 by passing two parameters in Azure VM.

@@ -1,0 +1,1 @@
+Create an ARM template to create a Windows Server 2016 Datacenter with a DNS name and a DSC extension. In the ARM template root folder, add a new Artifacts folder and create a text file in this folder. Copy this file to the C:\Artifacts folder on the Azure VM through the DSC extension.

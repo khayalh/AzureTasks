@@ -1,0 +1,1 @@
+Create an ARM template to create a Windows Server 2016 Datacenter with a DNS name and a DSC extension. Configure through DSC two different sites with different ports on IIS. 

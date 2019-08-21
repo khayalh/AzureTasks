@@ -26,10 +26,12 @@ param (
     [Parameter(Mandatory = $true)]
     [int]$secondSqlDatabaseCount,
     [Parameter(Mandatory = $true)]
-    [int]$exportedDatabaseNumber
+    [int]$exportedDatabaseNumber,
+    [Parameter(Mandatory = $true)]
+    [string]$azurecontextjsonfilepath
 )
 #Saving context for auto login in Azure
-Import-AzureRMContext -Path "C:\Scripts2\Task3\credentials.json"
+Import-AzureRMContext -Path $azurecontextjsonfilepath
 #Select Azure Subscription
 $subid = (Get-AzureRMSubscription).Id
 Select-AzureRmSubscription -SubscriptionId $subid
@@ -42,7 +44,7 @@ $storagectx = (New-AzureRMStorageAccount `
         -ResourceGroupName $resourceGroupName `
         -Name $storageAccountName `
         -SkuName "Standard_LRS" `
-        -Location "eastus").Context
+        -Location $location).Context
 New-AzureStorageContainer `
     -Name $storageContainerName `
     -Context $storagectx 
