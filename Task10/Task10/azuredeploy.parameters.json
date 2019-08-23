@@ -1,0 +1,74 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmAdminUserName": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/9f1d69d5-a8c4-43d6-a8fe-78743af3b499/resourceGroups/AzKeyVaultsRG/providers/Microsoft.KeyVault/vaults/Task10KeyVaults"
+        },
+        "secretName": "vmAdminUserName"
+      }
+    },
+    "vmAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/9f1d69d5-a8c4-43d6-a8fe-78743af3b499/resourceGroups/AzKeyVaultsRG/providers/Microsoft.KeyVault/vaults/Task10KeyVaults"
+        },
+        "secretName": "vmAdminPassword"
+      }
+    },
+    "vmWindowsOSVersion": {
+      "value": "2016-Datacenter"
+    },
+    "vm1Name": {
+      "value": "vm1"
+    },
+    "vm2Name": {
+      "value": "vm2"
+    },
+    "pipdnsname": {
+      "value": "applicationgatewayv2"
+    },
+    "frontendCertData":{
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/9f1d69d5-a8c4-43d6-a8fe-78743af3b499/resourceGroups/AzKeyVaultsRG/providers/Microsoft.KeyVault/vaults/Task10KeyVaults"
+        },
+        "secretName": "frontendCertData"
+      }
+    },
+    "frontendCertPassword":{
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/9f1d69d5-a8c4-43d6-a8fe-78743af3b499/resourceGroups/AzKeyVaultsRG/providers/Microsoft.KeyVault/vaults/Task10KeyVaults"
+        },
+        "secretName": "frontendCertPassword"
+      }
+    },
+    "backendPublicKeyData":{
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/9f1d69d5-a8c4-43d6-a8fe-78743af3b499/resourceGroups/AzKeyVaultsRG/providers/Microsoft.KeyVault/vaults/Task10KeyVaults"
+        },
+        "secretName": "backendPublicKeyData"
+      }
+    },
+    "thumbprint": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/9f1d69d5-a8c4-43d6-a8fe-78743af3b499/resourceGroups/AzKeyVaultsRG/providers/Microsoft.KeyVault/vaults/Task10KeyVaults"
+        },
+        "secretName": "thumbprint"
+      }
+    },
+    "pfxcertpass": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/9f1d69d5-a8c4-43d6-a8fe-78743af3b499/resourceGroups/AzKeyVaultsRG/providers/Microsoft.KeyVault/vaults/Task10KeyVaults"
+        },
+        "secretName": "pfxcertpass"
+      }
+    }
+  }
+}
